@@ -12,18 +12,27 @@
   />
 
   <section class="card" style="margin-top:14px;">
-    <div class="small">
+    <div class="small" v-if="loading">Loading devotionals…</div>
+
+    <div class="small" v-else-if="error" style="color:#b00020;">
+      {{ error }}
+    </div>
+
+    <div class="small" v-else>
       Showing <strong>{{ filtered.length }}</strong> of <strong>{{ all.length }}</strong> entries
     </div>
   </section>
 
-  <DevotionalList :items="filtered" />
+  <DevotionalList v-if="!loading && !error" :items="filtered" />
 </template>
 
 <script setup>
   import { onMounted, ref, computed } from "vue";
   import { fetchDevotionals } from "../api/devotionals";
   import { normalizeSubjects, applyDevotionalQuery } from "../utils/devotionals";
+  import PageHeader from "../components/PageHeader.vue";
+  import DevotionalFilterBar from "../components/DevotionalFilterBar.vue";
+  import DevotionalList from "../components/DevotionalList.vue";
 
   const all = ref([]);
   const loading = ref(false);

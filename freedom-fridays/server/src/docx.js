@@ -2,7 +2,36 @@ import mammoth from "mammoth";
 import sanitizeHtml from "sanitize-html";
 
 export async function docxBufferToHtmlAndText(buffer) {
-  const { value: rawHtml } = await mammoth.convertToHtml({ buffer });
+  // Mammoth defaults:
+  // - bold => <strong>
+  // - italic => <em>
+  // - underline is IGNORED unless you map it (u => ...)
+  //
+  // Also: Mammoth only matches b/i/u when they are explicitly applied.
+  // Text that is bold/italic/underlined because of a *run style* may need mappings.
+  const options = {
+    // Keep the default style map AND add our overrides
+    includeDefaultStyleMap: true,
+
+    // Style maps:
+    // - u => u enables underline (otherwise Mammoth drops it)
+    // - r[style-name='Strong'] etc catches common Word character styles
+    styleMap: [
+      // UNDERLINE: opt-in (default is ignored)
+      "u => u",
+
+      // Common Word character styles:
+      "r[style-name='Strong'] => strong",
+      "r[style-name='Emphasis'] => em",
+      "r[style-name='Underline'] => u",
+
+      // Some docs use these names:
+      "r[style-name='Strong Emphasis'] => strong > em",
+      "r[style-name='Intense Emphasis'] => em",
+    ],
+  };
+
+  const { value: rawHtml } = await mammoth.convertToHtml({ buffer }, options);
 
   const cleanHtml = sanitizeHtml(rawHtml, {
     allowedTags: [
@@ -27,11 +56,17 @@ export async function docxBufferToHtmlAndText(buffer) {
       a: ["href", "name", "target", "rel"],
       span: ["style"],
     },
+
+    // If Mammoth ever outputs underline as inline styles instead of <u>,
+    // this keeps it safe (optional, but harmless).
     allowedStyles: {
       span: {
         "text-decoration": [/^underline$/],
+        "font-weight": [/^\d+$/],
+        "font-style": [/^italic$/],
       },
     },
+
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", {
         rel: "noopener noreferrer",

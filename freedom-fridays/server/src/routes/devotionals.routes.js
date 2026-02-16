@@ -34,7 +34,13 @@ router.get("/", async (req, res) => {
 
   const filter = {};
   if (subject && subject !== "All") filter.subjects = subject;
-  if (q) filter.$text = { $search: q };
+  if (q) {
+    filter.$or = [
+      { title: { $regex: q, $options: "i" } },
+      { text: { $regex: q, $options: "i" } },
+    ];
+  }
+  // if (q) filter.$text = { $search: q };
 
   const sortSpec = sort === "date_asc" ? { date: 1 } : { date: -1 };
 
@@ -50,13 +56,13 @@ router.get("/", async (req, res) => {
         readingTimeMinutes: 1,
         createdAt: 1,
         updatedAt: 1,
-        ...(q ? { score: { $meta: "textScore" } } : {}),
       },
     })
-    .sort(q ? { score: { $meta: "textScore" }, ...sortSpec } : sortSpec)
+    .sort(sortSpec)
     .skip(skip)
     .limit(limit)
     .toArray();
+
 
   const total = await db.collection("devotionals").countDocuments(filter);
 

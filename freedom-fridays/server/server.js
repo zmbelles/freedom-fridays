@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { connectMongo } from "./src/mongo.js";
-import devotionalsRouter from "./src/routes/devotionals.js";
+import devotionalsRouter from "./src/routes/devotionals.routes.js";
 
 dotenv.config();
 

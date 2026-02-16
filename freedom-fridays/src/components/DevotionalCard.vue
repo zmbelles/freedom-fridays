@@ -34,8 +34,14 @@ const props = defineProps({
 const prettyDate = computed(() => {
   const dateStr = props.devotional?.date;
   if (!dateStr) return "—";
-  const d = new Date(dateStr + "T00:00:00");
+
+  const d = new Date(`${dateStr}T00:00:00`);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 });
 </script>
