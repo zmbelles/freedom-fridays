@@ -21,22 +21,35 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
-import PageHeader from "../components/PageHeader.vue";
-import DevotionalFilterBar from "../components/DevotionalFilterBar.vue";
-import DevotionalList from "../components/DevotionalList.vue";
-import { DEVOTIONALS } from "../data/devotionals.mock";
-import { normalizeSubjects, applyDevotionalQuery } from "../utils/devotionals";
+  import { onMounted, ref, computed } from "vue";
+  import { fetchDevotionals } from "../api/devotionals";
+  import { normalizeSubjects, applyDevotionalQuery } from "../utils/devotionals";
 
-const all = DEVOTIONALS;
+  const all = ref([]);
+  const loading = ref(false);
+  const error = ref("");
 
-const search = ref("");
-const subject = ref("All");
-const sort = ref("date_desc");
+  const search = ref("");
+  const subject = ref("All");
+  const sort = ref("date_desc");
 
-const subjects = computed(() => normalizeSubjects(all));
+  const subjects = computed(() => normalizeSubjects(all.value));
+  const filtered = computed(() =>
+    applyDevotionalQuery(all.value, { search: search.value, subject: subject.value, sort: sort.value })
+  );
 
-const filtered = computed(() =>
-  applyDevotionalQuery(all, { search: search.value, subject: subject.value, sort: sort.value })
-);
+  async function load() {
+    loading.value = true;
+    error.value = "";
+    try {
+      const { items } = await fetchDevotionals({ limit: 200 });
+      all.value = items;
+    } catch (e) {
+      error.value = e?.message || "Failed to load devotionals.";
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  onMounted(load);
 </script>

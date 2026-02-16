@@ -16,22 +16,26 @@
     </p>
 
     <div style="margin-top:12px;">
-      <button class="btn" disabled title="Full devotional pages come next">
-        Read (coming soon)
-      </button>
+      <RouterLink class="btn" :to="`/devotionals/${devotional.slug}`">
+        Read
+      </RouterLink>
     </div>
   </article>
 </template>
 
 <script setup>
 import { computed } from "vue";
+import { RouterLink } from "vue-router";
 
 const props = defineProps({
   devotional: { type: Object, required: true },
 });
 
 const prettyDate = computed(() => {
-  const d = new Date(props.devotional.date + "T00:00:00");
+  const dateStr = props.devotional?.date;
+  if (!dateStr) return "—";
+  const d = new Date(dateStr + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 });
 </script>
