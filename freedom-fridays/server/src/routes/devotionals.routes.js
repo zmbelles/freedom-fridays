@@ -1,6 +1,12 @@
 import express from "express";
 import multer from "multer";
 import { ObjectId } from "mongodb";
+import jwt from "jsonwebtoken";
+import { execFile } from "child_process";
+import { writeFile, readFile, unlink } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+import { randomBytes } from "crypto";
 
 import { getDb, getBucket } from "../mongo.js";
 import {
@@ -13,14 +19,37 @@ import {
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+async function odtBufferToDocxBuffer(odtBuffer) {
+  const id = randomBytes(8).toString("hex");
+  const inPath = join(tmpdir(), `ff-upload-${id}.odt`);
+  const outDir = tmpdir();
+  const outPath = join(outDir, `ff-upload-${id}.docx`);
+  await writeFile(inPath, odtBuffer);
+  await new Promise((resolve, reject) => {
+    execFile("pandoc", [inPath, "-o", outPath], (err) => {
+      err ? reject(new Error(`pandoc conversion failed: ${err.message}`)) : resolve();
+    });
+  });
+  const docxBuffer = await readFile(outPath);
+  await unlink(inPath).catch(() => {});
+  await unlink(outPath).catch(() => {});
+  return docxBuffer;
+}
+
 function requireUploadAuth(req, res, next) {
-  const required = process.env.UPLOAD_TOKEN;
-  if (!required) return res.status(500).json({ error: "UPLOAD_TOKEN not configured." });
+  const secret = process.env.AUTH_JWT_SECRET;
+  if (!secret) return res.status(500).json({ error: "AUTH_JWT_SECRET not configured." });
 
-  const token = req.header("x-upload-token");
-  if (!token || token !== required) return res.status(401).json({ error: "Unauthorized." });
+  const cookieName = process.env.AUTH_COOKIE_NAME || "ff_admin";
+  const token = req.cookies?.[cookieName];
+  if (!token) return res.status(401).json({ error: "Not authenticated." });
 
-  next();
+  try {
+    jwt.verify(token, secret);
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid session." });
+  }
 }
 
 router.get("/", async (req, res) => {
@@ -29,7 +58,7 @@ router.get("/", async (req, res) => {
   const q = (req.query.q || "").toString().trim();
   const subject = (req.query.subject || "").toString().trim();
   const sort = (req.query.sort || "date_desc").toString();
-  const limit = Math.min(100, Math.max(1, Number(req.query.limit || 50)));
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit || 50)));
   const skip = Math.max(0, Number(req.query.skip || 0));
 
   const filter = {};
@@ -69,6 +98,20 @@ router.get("/", async (req, res) => {
   res.json({ items, total });
 });
 
+router.get("/check-date", async (req, res) => {
+  const db = getDb();
+  const date = (req.query.date || "").toString().trim();
+  if (!date) return res.json({ exists: false });
+
+  const doc = await db.collection("devotionals").findOne(
+    { date },
+    { projection: { title: 1 } }
+  );
+
+  if (!doc) return res.json({ exists: false });
+  res.json({ exists: true, title: doc.title });
+});
+
 router.get("/:slug", async (req, res) => {
   const db = getDb();
   const slug = req.params.slug;
@@ -99,16 +142,19 @@ router.post("/upload", requireUploadAuth, upload.single("file"), async (req, res
 
   if (!req.file) return res.status(400).json({ error: "Missing file" });
   const originalFilename = req.file.originalname || "devotional.docx";
+  const isOdt = originalFilename.toLowerCase().endsWith(".odt");
+  const isDocx = originalFilename.toLowerCase().endsWith(".docx");
 
-  if (!originalFilename.toLowerCase().endsWith(".docx")) {
-    return res.status(400).json({ error: "File must be .docx" });
+  if (!isDocx && !isOdt) {
+    return res.status(400).json({ error: "File must be .docx or .odt" });
   }
 
   const rawTitle = (req.body.title || "").toString().trim();
   const date = (req.body.date || "").toString().trim();
   const subjects = parseSubjects(req.body.subjects);
 
-  const { html, text } = await docxBufferToHtmlAndText(req.file.buffer);
+  const docxBuffer = isOdt ? await odtBufferToDocxBuffer(req.file.buffer) : req.file.buffer;
+  const { html, text } = await docxBufferToHtmlAndText(docxBuffer);
 
   const title =
     rawTitle ||
@@ -128,7 +174,7 @@ router.post("/upload", requireUploadAuth, upload.single("file"), async (req, res
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   });
 
-  uploadStream.end(req.file.buffer);
+  uploadStream.end(docxBuffer);
 
   const fileId = await new Promise((resolve, reject) => {
     uploadStream.on("finish", () => resolve(uploadStream.id));
