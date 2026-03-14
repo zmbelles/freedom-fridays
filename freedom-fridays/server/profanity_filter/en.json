@@ -4552,6 +4552,14 @@
     "severity": 4
   },
   {
+    "id": "Al-quaida",
+    "match": "al-quaida|al qaeda|al-qaeda|al qaida",
+    "tags": [
+      "hate"
+    ],
+    "severity": 4
+  },
+  {
     "id": "kkk",
     "match": "kkk|klan",
     "tags": [
