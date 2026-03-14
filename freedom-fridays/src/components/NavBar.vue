@@ -17,6 +17,7 @@
         <RouterLink to="/" class="nav-link" active-class="active">Home</RouterLink>
         <RouterLink to="/about" class="nav-link" active-class="active">About</RouterLink>
         <RouterLink to="/devotionals" class="nav-link" active-class="active">Devotionals</RouterLink>
+        <RouterLink to="/prayer-wall" class="nav-link" active-class="active">Prayer Wall</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/upload" class="nav-link" active-class="active">Upload</RouterLink>
       </div>
     </nav>
