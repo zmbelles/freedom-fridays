@@ -99,7 +99,19 @@ export function computeReadingTimeMinutes(text) {
 }
 
 export function makeExcerpt(text, maxLen = 180) {
-  const t = text.replace(/\s+/g, " ").trim();
+  let t = text;
+
+  // Strip the standard Freedom Fridays boilerplate header that opens every devotional.
+  // Pattern: "Remember today is Freedom Friday..." through the arrow divider line.
+  t = t.replace(
+    /Remember today is Freedom Friday[\s\S]*?Here is my verse\/verses for the day\.?\s*/i,
+    ""
+  );
+
+  // Also strip a bare arrow-divider line if present (>>>+ Here is my verse...)
+  t = t.replace(/^[>\s]+Here is my verse[^\n]*\n?/im, "");
+
+  t = t.replace(/\s+/g, " ").trim();
   if (t.length <= maxLen) return t;
   return t.slice(0, maxLen).replace(/[,\s]+$/, "") + "…";
 }
