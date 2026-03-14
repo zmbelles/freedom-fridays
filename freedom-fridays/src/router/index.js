@@ -5,6 +5,7 @@ import Devotionals from "../pages/Devotionals.vue";
 import DevotionalPage from "../pages/DevotionalPage.vue";
 import Login from "../pages/Login.vue";
 import Upload from "../pages/Upload.vue";
+import PrayerWall from "../pages/PrayerWall.vue";
 import { useAuth } from "../composables/useAuth.js";
 
 const router = createRouter({
@@ -16,6 +17,7 @@ const router = createRouter({
     { path: "/devotionals", name: "devotionals", component: Devotionals },
     { path: "/devotionals/:slug", name: "devotional", component: DevotionalPage },
     { path: "/upload", name: "upload", component: Upload, meta: { requiresAuth: true } },
+    { path: "/prayer-wall", name: "prayer-wall", component: PrayerWall },
   ],
   scrollBehavior() {
     return { top: 0 };
