@@ -1,0 +1,9 @@
+{
+  "buildCommand": "cd freedom-fridays && npm ci && npm run build",
+  "outputDirectory": "freedom-fridays/dist",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
