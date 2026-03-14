@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { connectMongo } from "../freedom-fridays/server/src/mongo.js";
-import app from "../freedom-fridays/server/app.js";
+import { connectMongo } from "../server/src/mongo.js";
+import app from "../server/app.js";
 
 let connected = false;
 
