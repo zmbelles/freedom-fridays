@@ -203,6 +203,29 @@ router.post("/upload", requireUploadAuth, upload.single("file"), async (req, res
   res.json({ ok: true, slug });
 });
 
+router.delete("/:slug", requireUploadAuth, async (req, res) => {
+  const db = getDb();
+  const bucket = getBucket();
+  const slug = req.params.slug;
+
+  const doc = await db.collection("devotionals").findOne(
+    { slug },
+    { projection: { docxFileId: 1 } }
+  );
+  if (!doc) return res.status(404).json({ error: "Not found" });
+
+  if (doc.docxFileId) {
+    try {
+      await bucket.delete(new ObjectId(doc.docxFileId));
+    } catch {
+      // file may already be missing — proceed
+    }
+  }
+
+  await db.collection("devotionals").deleteOne({ slug });
+  res.json({ ok: true });
+});
+
 router.get("/:slug/docx", async (req, res) => {
   const db = getDb();
   const bucket = getBucket();
