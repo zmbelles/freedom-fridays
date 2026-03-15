@@ -34,6 +34,9 @@ export async function connectMongo() {
   await db.collection("prayer_comments").createIndex({ prayerId: 1, createdAt: 1 });
   await db.collection("banned_ips").createIndex({ ip: 1 }, { unique: true });
 
+  await db.collection("subscribers").createIndex({ email: 1 }, { unique: true });
+  await db.collection("subscribers").createIndex({ token: 1 });
+
   console.log("Mongo connected:", dbName);
   return db;
 }

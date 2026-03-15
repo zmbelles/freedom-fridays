@@ -200,7 +200,7 @@ router.post("/upload", requireUploadAuth, upload.single("file"), async (req, res
 
   await db.collection("devotionals").insertOne(doc);
 
-  res.json({ ok: true, slug });
+  res.json({ ok: true, slug, title, excerpt, date: date || null });
 });
 
 router.delete("/:slug", requireUploadAuth, async (req, res) => {
