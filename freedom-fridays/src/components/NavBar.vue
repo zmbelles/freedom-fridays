@@ -2,10 +2,10 @@
   <header class="nav">
     <div class="nav-left">
       <p v-if="isLoggedIn" class="welcome-back">Welcome back, Jacob</p>
-      <div class="brand">
+      <RouterLink to="/" class="brand">
         <div class="brand-title">Freedom Fridays</div>
         <div class="brand-sub">Weekly Christian Devotionals</div>
-      </div>
+      </RouterLink>
     </div>
 
     <nav class="nav-right">
@@ -41,6 +41,11 @@ async function handleLogout() {
 </script>
 
 <style scoped>
+.brand {
+  text-decoration: none;
+  color: inherit;
+}
+
 .nav-left {
   display: flex;
   flex-direction: column;
