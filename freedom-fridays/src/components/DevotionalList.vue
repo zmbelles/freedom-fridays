@@ -6,7 +6,7 @@
     </div>
 
     <div v-for="d in items" :key="d.id" style="grid-column: span 6;">
-      <DevotionalCard :devotional="d" />
+      <DevotionalCard :devotional="d" :canDelete="canDelete" @deleted="emit('deleted', $event)" />
     </div>
   </section>
 </template>
@@ -16,5 +16,8 @@ import DevotionalCard from "./DevotionalCard.vue";
 
 defineProps({
   items: { type: Array, default: () => [] },
+  canDelete: { type: Boolean, default: false },
 });
+
+const emit = defineEmits(["deleted"]);
 </script>

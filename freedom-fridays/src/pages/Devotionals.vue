@@ -42,7 +42,7 @@
     </div>
   </section>
 
-  <DevotionalList v-if="!loading && !error" :items="paginated" />
+  <DevotionalList v-if="!loading && !error" :items="paginated" :canDelete="isLoggedIn" @deleted="onDeleted" />
 
   <section v-if="!loading && !error && totalPages > 1" class="card" style="margin-top:14px;">
     <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
@@ -60,6 +60,10 @@ import { normalizeSubjects, applyDevotionalQuery } from "../utils/devotionals";
 import PageHeader from "../components/PageHeader.vue";
 import DevotionalFilterBar from "../components/DevotionalFilterBar.vue";
 import DevotionalList from "../components/DevotionalList.vue";
+import { useAuth } from "../composables/useAuth";
+
+const { isLoggedIn, checkAuth } = useAuth();
+checkAuth();
 
 const all = ref([]);
 const loading = ref(false);
@@ -97,6 +101,10 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+
+function onDeleted(slug) {
+  all.value = all.value.filter(d => d.slug !== slug);
 }
 
 onMounted(load);
