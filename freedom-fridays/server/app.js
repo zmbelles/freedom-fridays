@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import devotionalsRouter from "./src/routes/devotionals.routes.js";
 import prayerRouter from "./src/routes/prayer.routes.js";
 import authRouter from "./src/routes/auth.routes.js";
+import subscribersRouter from "./src/routes/subscribers.routes.js";
 
 const app = express();
 
@@ -30,5 +31,6 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/devotionals", devotionalsRouter);
 app.use("/api/prayers", prayerRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/subscribers", subscribersRouter);
 
 export default app;
