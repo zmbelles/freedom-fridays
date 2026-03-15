@@ -7,6 +7,7 @@ import { connectMongo } from "./src/mongo.js";
 import devotionalsRouter from "./src/routes/devotionals.routes.js";
 import prayerRouter from "./src/routes/prayer.routes.js";
 import authRouter from "./src/routes/auth.routes.js";
+import subscribersRouter from "./src/routes/subscribers.routes.js";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/devotionals", devotionalsRouter);
 app.use("/api/prayers", prayerRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/subscribers", subscribersRouter);
 
 const port = Number(process.env.PORT || 3001);
 

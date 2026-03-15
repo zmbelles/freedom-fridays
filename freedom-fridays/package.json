@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "docx-preview": "^0.3.7",
     "mongodb": "^7.1.0",
     "vue": "^3.5.24",
