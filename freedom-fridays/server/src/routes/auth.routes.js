@@ -19,7 +19,6 @@ const loginLimiter = rateLimit({
 });
 
 const COOKIE_NAME = process.env.AUTH_COOKIE_NAME || "ff_admin";
-const JWT_SECRET = process.env.AUTH_JWT_SECRET;
 const IS_PROD = (process.env.NODE_ENV || "development") === "production";
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -27,9 +26,9 @@ const DUMMY_HASH =
   "$argon2id$v=19$m=65536,t=3,p=1$ZmFrZXNhbHQ$5/4l6w7oO0z5g8d7nZg8jv8Y4C8Y2j8G5n6dQhQ6m3U";
 
 function requireJwtSecret() {
-  if (!JWT_SECRET) {
-    throw new Error("Missing AUTH_JWT_SECRET in environment.");
-  }
+  const secret = process.env.AUTH_JWT_SECRET;
+  if (!secret) throw new Error("Missing AUTH_JWT_SECRET in environment.");
+  return secret;
 }
 
 function getCookieOptions() {
@@ -53,19 +52,9 @@ function clearSessionCookie(res) {
 }
 
 function signSessionToken(user) {
-  requireJwtSecret();
-
+  const secret = requireJwtSecret();
   const roles = Array.isArray(user.roles) ? user.roles : [];
-
-  return jwt.sign(
-    {
-      sub: String(user._id),
-      email: user.email,
-      roles,
-    },
-    JWT_SECRET,
-    { expiresIn: "7d" }
-  );
+  return jwt.sign({ sub: String(user._id), email: user.email, roles }, secret, { expiresIn: "7d" });
 }
 
 function readSessionToken(req) {
@@ -73,8 +62,7 @@ function readSessionToken(req) {
 }
 
 function verifySessionToken(token) {
-  requireJwtSecret();
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, requireJwtSecret());
 }
 
 function invalidCredentials(res) {

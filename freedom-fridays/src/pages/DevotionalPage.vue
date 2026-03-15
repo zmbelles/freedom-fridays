@@ -21,6 +21,15 @@
           <a :href="docxUrl" download class="btn btn-primary">
             ⬇ Download .docx
           </a>
+          <button
+            v-if="isLoggedIn"
+            class="btn btn-danger"
+            type="button"
+            :disabled="deleting"
+            @click="handleDelete"
+          >
+            {{ deleting ? "Deleting…" : "Delete" }}
+          </button>
         </div>
       </div>
 
@@ -73,8 +82,12 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "../components/PageHeader.vue";
-import { fetchDevotionalBySlug } from "../api/devotionals";
+import { fetchDevotionalBySlug, deleteDevotional } from "../api/devotionals";
 import { renderAsync } from "docx-preview";
+import { useAuth } from "../composables/useAuth";
+
+const { isLoggedIn, checkAuth } = useAuth();
+checkAuth();
 
 const route = useRoute();
 const router = useRouter();
@@ -105,6 +118,20 @@ const subtitle = computed(() => {
   const rt = devotional.value?.readingTimeMinutes ?? "—";
   return `${pretty} · ${rt} min read`;
 });
+
+const deleting = ref(false);
+
+async function handleDelete() {
+  if (!confirm(`Delete "${devotional.value?.title}"? This cannot be undone.`)) return;
+  deleting.value = true;
+  try {
+    await deleteDevotional(slug.value);
+    router.push({ name: "devotionals" });
+  } catch (e) {
+    alert(e?.message || "Failed to delete.");
+    deleting.value = false;
+  }
+}
 
 function goBack() {
   if (window.history.length > 1) router.back();
@@ -225,6 +252,21 @@ watch(() => slug.value, load);
 }
 .btn-primary:active {
   transform: translateY(0);
+}
+
+/* Danger button */
+.btn-danger {
+  background: #b00020;
+  color: #fff;
+  border: 1px solid #8e001a;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #8e001a;
+  transform: translateY(-1px);
+}
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Shell: contains the button and gives us a clean stacking context */

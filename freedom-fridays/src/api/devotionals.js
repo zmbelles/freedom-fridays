@@ -17,6 +17,15 @@ export async function fetchDevotionalBySlug(slug) {
   return httpJson(`/api/devotionals/${encodeURIComponent(slug)}`);
 }
 
+export async function deleteDevotional(slug) {
+  const res = await fetch(`/api/devotionals/${encodeURIComponent(slug)}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 let cachedList = null;
 let cachedAt = 0;
 
